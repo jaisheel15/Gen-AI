@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LexIntel – Legal Document Intelligence</title>
+  <meta name="description" content="Automated contract analysis. Surface risk, extract clauses, and generate executive summaries in seconds."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/styles.css?v=2"/>
+</head>
+<body>
+
+<!-- ─── Navbar ─── -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo">⚖️</div>
+    <span class="nav-title">Lex<span class="accent">Doc</span></span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-btn-analyze" onclick="switchView('analyze')">
+      <span>🔍</span> Analyze
+    </button>
+    <button class="nav-tab" id="tab-btn-batch" onclick="switchView('batch')">
+      <span>📊</span> Batch Compare
+    </button>
+    <button class="nav-tab" id="tab-btn-settings" onclick="switchView('settings')">
+      <span>⚙️</span> Settings
+    </button>
+  </div>
+  <div class="nav-status" id="navStatus">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusLabel">Ready</span>
+  </div>
+</nav>
+
+<main class="main-container">
+
+<!-- ════════════ VIEW: ANALYZE ════════════ -->
+<div class="view active" id="view-analyze">
+
+  <!-- Hero -->
+  <div id="heroSection">
+    <div class="hero-section">
+      <div class="hero-badge">✨ Powered by Advanced Language Models</div>
+      <h1 class="hero-title">Legal Intelligence,<br/><span class="gradient-text">Automated.</span></h1>
+      <p class="hero-subtitle">Upload a contract. Get clause-level risk scoring, market-standard deviation flags, and a board-ready executive summary — in seconds.</p>
+      <div class="upload-zone" id="uploadZone"
+           ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <div class="upload-icon-wrap"><span class="upload-icon">📄</span></div>
+        <p class="upload-title">Drop your contract here</p>
+        <p class="upload-sub">PDF or DOCX &middot; up to 50MB</p>
+        <label class="btn-primary" for="fileInput">
+          <input type="file" id="fileInput" accept=".pdf,.docx" onchange="handleFileSelect(event)" hidden/>
+          Browse Files
+        </label>
+        <p class="upload-hint">No file? <button class="link-btn" onclick="loadDemo()">Load demo contract →</button></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state hidden" id="loadingState">
+    <div class="loader-orb">
+      <div class="orb-r r1"></div><div class="orb-r r2"></div><div class="orb-r r3"></div>
+      <span class="orb-emoji">⚖️</span>
+    </div>
+    <h2 class="loading-title">Analyzing Contract…</h2>
+    <div class="loading-steps" id="loadingSteps">
+      <div class="lstep" id="ls0">📄 Parsing document &amp; extracting text</div>
+      <div class="lstep" id="ls1">🔍 Identifying &amp; classifying 7 clause types</div>
+      <div class="lstep" id="ls2">⚠️ Scoring risk against market-standard baseline</div>
+      <div class="lstep" id="ls3">✍️ Generating plain-English executive summary</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results hidden" id="resultsSection">
+
+    <div class="results-topbar">
+      <div>
+        <div class="results-filename" id="rFilename">—</div>
+        <div class="results-meta" id="rMeta">—</div>
+      </div>
+      <div style="display:flex;gap:.6rem;">
+        <button class="btn-ghost" onclick="printSummary()">🖨️ Print</button>
+        <button class="btn-ghost" onclick="resetAnalysis()">← New Analysis</button>
+      </div>
+    </div>
+
+    <!-- Risk Banner -->
+    <div class="risk-banner" id="riskBanner">
+      <div class="rb-left">
+        <div class="rb-label">Overall Contract Risk</div>
+        <div class="rb-verdict" id="rbVerdict">—</div>
+        <div class="rb-score-line" id="rbScoreLine">Score: —/100</div>
+      </div>
+      <div class="rb-center">
+        <svg viewBox="0 0 200 115" class="gauge-svg" id="gaugeSvg">
+          <defs>
+            <linearGradient id="gGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#22c55e"/>
+              <stop offset="35%" stop-color="#f59e0b"/>
+              <stop offset="70%" stop-color="#f97316"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 100 A80 80 0 0 1 180 100" stroke="rgba(255,255,255,0.08)" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <path d="M20 100 A80 80 0 0 1 180 100" stroke="url(#gGrad)" stroke-width="14" fill="none" stroke-linecap="round"
+                stroke-dasharray="251" stroke-dashoffset="251" id="gaugeArc" style="transition:stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)"/>
+          <text x="100" y="92" text-anchor="middle" class="g-score" id="gScore">0</text>
+          <text x="100" y="108" text-anchor="middle" class="g-label">/100</text>
+        </svg>
+      </div>
+      <div class="rb-right" id="rbQuads">
+        <div class="quad" id="quad-Financial"><div class="q-name">Financial</div><div class="q-bar-wrap"><div class="q-bar-fill" id="qf-Financial"></div></div><div class="q-val" id="qv-Financial">0</div></div>
+        <div class="quad" id="quad-Operational"><div class="q-name">Operational</div><div class="q-bar-wrap"><div class="q-bar-fill" id="qf-Operational"></div></div><div class="q-val" id="qv-Operational">0</div></div>
+        <div class="quad" id="quad-Legal"><div class="q-name">Legal</div><div class="q-bar-wrap"><div class="q-bar-fill" id="qf-Legal"></div></div><div class="q-val" id="qv-Legal">0</div></div>
+        <div class="quad" id="quad-Reputational"><div class="q-name">Reputational</div><div class="q-bar-wrap"><div class="q-bar-fill" id="qf-Reputational"></div></div><div class="q-val" id="qv-Reputational">0</div></div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="results-grid">
+      <!-- Clause Panel -->
+      <div class="panel clauses-panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Clause Analysis <span class="clause-count" id="clauseCount"></span></h2>
+          <div class="filter-row" id="filterRow">
+            <button class="fchip active" onclick="filterClauses('all',this)">All</button>
+            <button class="fchip" onclick="filterClauses('Unfavourable',this)">⚠️ Unfavourable</button>
+            <button class="fchip" onclick="filterClauses('Unusual',this)">🔶 Unusual</button>
+            <button class="fchip" onclick="filterClauses('Favourable',this)">✅ Favourable</button>
+          </div>
+        </div>
+        <div class="clause-list" id="clauseList"></div>
+      </div>
+
+      <!-- Summary Panel -->
+      <div class="panel summary-panel" id="summaryPanel">
+        <div class="panel-head">
+          <h2 class="panel-title">Executive Summary</h2>
+          <button class="btn-ghost sm" onclick="copySummary()">📋 Copy</button>
+        </div>
+        <div id="summaryBody"></div>
+      </div>
+    </div>
+
+    <!-- Text Preview -->
+    <div class="preview-section">
+      <button class="preview-toggle" id="previewToggle" onclick="togglePreview()">📄 Show Contract Text</button>
+      <pre class="contract-preview hidden" id="contractPreview"></pre>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════ VIEW: BATCH ════════════ -->
+<div class="view hidden" id="view-batch">
+  <div class="batch-hero">
+    <h2 class="section-title">Batch Due-Diligence Comparison</h2>
+    <p class="section-sub">Analyze 2–5 contracts. Then compare any clause type side-by-side — built for M&A workflows.</p>
+  </div>
+
+  <div class="batch-upload-zone" id="batchUploadZone"
+       ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleBatchDrop(event)">
+    <span class="upload-icon">📂</span>
+    <p class="upload-title">Drop 2–5 contracts</p>
+    <p class="upload-sub">Each will be analyzed individually first</p>
+    <label class="btn-primary" for="batchInput">
+      <input type="file" id="batchInput" accept=".pdf,.docx" multiple onchange="handleBatchSelect(event)" hidden/>
+      Select Files
+    </label>
+  </div>
+
+  <div id="batchFileList" class="batch-file-list"></div>
+  <div id="batchAnalyzeControls" class="hidden" style="text-align:center;margin-top:1rem;">
+    <button class="btn-primary" id="batchAnalyzeBtn" onclick="runBatchAnalysis()">🔍 Analyze All Contracts</button>
+  </div>
+
+  <div class="loading-state hidden" id="batchLoadingState">
+    <div class="loader-orb"><div class="orb-r r1"></div><div class="orb-r r2"></div><div class="orb-r r3"></div><span class="orb-emoji">📊</span></div>
+    <h2 class="loading-title">Analyzing Contracts…</h2>
+    <p style="color:var(--muted);text-align:center;font-size:.9rem;">Please wait — each contract is being processed sequentially.</p>
+  </div>
+
+  <div class="batch-results hidden" id="batchResultsSection">
+    <div class="batch-analyzed-bar" id="batchAnalyzedBar"></div>
+    <div class="compare-controls">
+      <div class="compare-label">Compare clause:</div>
+      <select class="compare-select" id="compareClauseSelect">
+        <option value="Indemnity">Indemnity</option>
+        <option value="Limitation of Liability">Limitation of Liability</option>
+        <option value="Governing Law">Governing Law</option>
+        <option value="Termination">Termination</option>
+        <option value="IP Ownership">IP Ownership</option>
+        <option value="Payment Terms">Payment Terms</option>
+        <option value="Confidentiality">Confidentiality</option>
+      </select>
+      <button class="btn-primary sm" onclick="runComparison()">Compare →</button>
+    </div>
+    <div class="loading-state hidden" id="compareLoadingState" style="padding:2rem;">
+      <div class="loader-orb" style="width:60px;height:60px;"><div class="orb-r r1"></div><div class="orb-r r2"></div><span class="orb-emoji" style="font-size:1.2rem;">🔍</span></div>
+      <p style="color:var(--muted);font-size:.9rem;margin-top:.8rem;">Running comparison…</p>
+    </div>
+    <div id="comparisonResult"></div>
+    <button class="btn-ghost" onclick="resetBatch()" style="margin-top:2rem;display:block;margin-left:auto;margin-right:auto;">← New Comparison</button>
+  </div>
+</div>
+
+<!-- ════════════ VIEW: SETTINGS ════════════ -->
+<div class="view hidden" id="view-settings">
+  <div class="settings-layout">
+    <div class="settings-header">
+      <h2 class="section-title">Settings</h2>
+      <p class="section-sub">Configure your API key and customize the market-standard baseline clauses used for risk comparison.</p>
+    </div>
+
+    <!-- API Key -->
+    <div class="settings-card">
+      <div class="settings-card-title">🔑 API Key</div>
+      <div class="api-key-status" id="apiKeyStatus">Checking…</div>
+      <div class="input-row">
+        <input type="password" class="settings-input" id="apiKeyInput" placeholder="Enter your API key…"/>
+        <button class="btn-primary sm" onclick="saveSettings()">Save Key</button>
+      </div>
+      <p class="settings-hint">Your key is stored in memory only and never sent anywhere except the provider API. Get a free key at <a href="https://aistudio.google.com" target="_blank" class="link-btn">aistudio.google.com</a>.</p>
+    </div>
+
+    <!-- Baseline Editor -->
+    <div class="settings-card">
+      <div class="settings-card-title">📋 Market-Standard Baseline</div>
+      <p class="settings-hint" style="margin-bottom:1rem;">These are the reference texts used to classify deviations. Edit them to match your industry or jurisdiction.</p>
+      <div id="baselineEditor"></div>
+      <button class="btn-primary" onclick="saveBaseline()" style="margin-top:1rem;">💾 Save Baseline</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ─── Clause Detail Modal ─── -->
+<div class="modal-bg hidden" id="modalBg" onclick="closeModal()">
+  <div class="modal" id="clauseModal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalInner"></div>
+  </div>
+</div>
+
+<!-- ─── Toast ─── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="/static/app.js?v=2"></script>
+</body>
+</html>

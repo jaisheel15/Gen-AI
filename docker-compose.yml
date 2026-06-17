@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  legal-ai-app:
+    build: .
+    container_name: legal_ai_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    restart: unless-stopped
