@@ -116,13 +116,20 @@ Return the output in the strict schema provided.
         
         contents = []
         if is_scanned and file_bytes:
-            # Send file directly as inline data for Gemini PDF OCR/multimodal parsing
-            contents.append({
-                "mime_type": "application/pdf",
-                "data": file_bytes
-            })
-            # Append prompt instructions
-            contents.append(prompt)
+            # Use Gemini's File API to handle massive PDFs (stress test ready)
+            import tempfile
+            import os
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                tmp.write(file_bytes)
+                tmp_path = tmp.name
+                
+            try:
+                # Upload the document to Google's servers for processing (supports up to 2GB files)
+                uploaded_file = genai.upload_file(path=tmp_path, mime_type="application/pdf")
+                contents.append(uploaded_file)
+                contents.append(prompt)
+            finally:
+                os.remove(tmp_path)
         else:
             # Use extracted text
             contents.append(f"{prompt}\n\n--- CONTRACT TEXT ---\n{full_text}")
