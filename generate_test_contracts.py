@@ -98,7 +98,7 @@ def generate_consulting_contract(filepath):
     print(f"Generated consulting contract at: {filepath}")
 
 if __name__ == "__main__":
-    dir_path = "/home/Vansh/Desktop/Gen-Ai Project/sample_contracts"
+    dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sample_contracts")
     create_dir_if_not_exists(dir_path)
     
     generate_standard_contract(os.path.join(dir_path, "standard_partnership_agreement.docx"))
